@@ -115,20 +115,22 @@ export function WordCloud({ comments, className }: WordCloudProps) {
   }, [comments])
 
   return (
-    <div className={`flex flex-wrap gap-2 justify-center items-center p-6 ${className}`}>
-      {words.map((word, index) => (
-        <span
-          key={word.text}
-          className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground font-medium hover:scale-110 transition-transform cursor-pointer"
-          style={{
-            fontSize: `${word.size}px`,
-            animationDelay: `${index * 100}ms`,
-          }}
-        >
-          {word.text}
-          <span className="ml-1 text-xs opacity-60">({word.count})</span>
-        </span>
-      ))}
+    <div className={`relative w-full h-full overflow-hidden ${className}`}>
+      <div className="flex flex-wrap gap-2 justify-center items-center p-6">
+        {words.map((word, index) => (
+          <span
+            key={word.text}
+            className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground font-medium hover:scale-110 transition-transform cursor-pointer break-words"
+            style={{
+              fontSize: `${word.size}px`,
+              animationDelay: `${index * 100}ms`,
+            }}
+          >
+            {word.text}
+            <span className="ml-1 text-xs opacity-60">({word.count})</span>
+          </span>
+        ))}
+      </div>
     </div>
   )
 }

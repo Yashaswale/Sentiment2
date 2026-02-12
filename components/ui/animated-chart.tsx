@@ -51,14 +51,16 @@ export function AnimatedPieChart({ data, className }: AnimatedPieChartProps) {
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip 
+          <Tooltip
             formatter={(value) => [`${value}%`, "Percentage"]}
-            contentStyle={{ 
-              backgroundColor: 'var(--popover)',
-              border: '1px solid var(--border)',
-              borderRadius: '0.5rem',
-              color: 'var(--popover-foreground)'
+            contentStyle={{
+              backgroundColor: "rgba(15,23,42,0.95)",
+              border: "1px solid rgba(148,163,184,0.6)",
+              borderRadius: "0.5rem",
+              color: "#ffffff",
             }}
+            labelStyle={{ color: "#ffffff" }}
+            itemStyle={{ color: "#ffffff" }}
           />
           <Legend 
             wrapperStyle={{ color: 'var(--foreground)' }}
@@ -99,14 +101,16 @@ export function AnimatedBarChart({ data, className }: AnimatedBarChartProps) {
             tick={{ fill: 'var(--foreground)' }}
             axisLine={{ stroke: 'var(--border)' }}
           />
-          <Tooltip 
+          <Tooltip
             formatter={(value) => [`${value}%`, "Percentage"]}
-            contentStyle={{ 
-              backgroundColor: 'var(--popover)',
-              border: '1px solid var(--border)',
-              borderRadius: '0.5rem',
-              color: 'var(--popover-foreground)'
+            contentStyle={{
+              backgroundColor: "rgba(15,23,42,0.95)",
+              border: "1px solid rgba(148,163,184,0.6)",
+              borderRadius: "0.5rem",
+              color: "#ffffff",
             }}
+            labelStyle={{ color: "#ffffff" }}
+            itemStyle={{ color: "#ffffff" }}
           />
           <Bar dataKey="value" radius={[4, 4, 0, 0]} animationBegin={0} animationDuration={1500} />
         </BarChart>

@@ -15,6 +15,14 @@ import {
 import { AnimatedText } from "@/components/ui/animated-text"
 import { AnimatedBlob } from "@/components/ui/animated-blob"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import {
   Brain,
@@ -122,9 +130,58 @@ export default function HomePage() {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </GradientButton>
               </Link>
-              <Button size="lg" variant="outline" className="hover:bg-muted/50 bg-transparent">
-                Learn More
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="lg" variant="outline" className="hover:bg-muted/50 bg-transparent">
+                    Learn More
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>How SentimentAI Works</DialogTitle>
+                    <DialogDescription>
+                      A simple end-to-end flow showing how your text and comments are processed into insights.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 text-left text-sm">
+                    <div>
+                      <p className="font-semibold mb-1">1. Provide your data</p>
+                      <p className="text-muted-foreground">
+                        Start from the Analysis page and choose between single text, bulk comments, or a YouTube video
+                        link. We only use this data to generate your current analysis.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-1">2. Smart preprocessing</p>
+                      <p className="text-muted-foreground">
+                        The backend cleans and normalizes your text, removes noise, and prepares each comment or line
+                        for sentiment analysis.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-1">3. AI sentiment analysis</p>
+                      <p className="text-muted-foreground">
+                        Each comment is scored as positive, negative, or neutral with a confidence score using AI
+                        models. We then aggregate these scores into overall metrics.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-1">4. Visual insights & word cloud</p>
+                      <p className="text-muted-foreground">
+                        On the Results page you get pie and bar charts, a word cloud of the most frequent terms, and a
+                        ranked list of comments so you can quickly see what people feel and why.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-1">5. History & enterprise</p>
+                      <p className="text-muted-foreground">
+                        Recent analyses are stored locally for quick access, and an enterprise version can unlock
+                        higher limits, team access, and custom integrations for your workflows.
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>

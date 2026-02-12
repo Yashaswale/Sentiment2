@@ -565,7 +565,7 @@ export default function ResultsPage() {
                 <GlassCardDescription>Most frequently used words in comments</GlassCardDescription>
               </GlassCardHeader>
               <GlassCardContent>
-                <WordCloud comments={results.comments} className="h-80" />
+                <WordCloud comments={results.comments} className="h-64" />
               </GlassCardContent>
             </GlassCard>
           </div>

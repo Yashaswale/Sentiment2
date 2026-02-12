@@ -19,6 +19,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Stepper } from "@/components/ui/stepper"
 import { ProcessingAnimation } from "@/components/ui/processing-animation"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { AnimatedBlob } from "@/components/ui/animated-blob"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import {
@@ -164,10 +173,42 @@ export default function AnalysisPage() {
             >
               Logout
             </Button>
-            <Button variant="ghost" className="flex items-center gap-2">
-              <History className="w-4 h-4" />
-              History
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Premium
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Enterprise Premium Access</DialogTitle>
+                  <DialogDescription>
+                    Unlock advanced features, higher limits, dedicated support, and custom integrations for your team.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  <p>
+                    Share your requirements and we&apos;ll get back to you with a tailored enterprise solution, pricing,
+                    and onboarding plan.
+                  </p>
+                  <p className="font-medium">
+                    Email:{" "}
+                    <a href="mailto:enterprise@sentimentai.com" className="text-primary underline">
+                      enterprise@sentimentai.com
+                    </a>
+                  </p>
+                  <p className="font-medium">
+                    Phone: <span className="text-foreground">+1 (000) 000-0000</span>
+                  </p>
+                </div>
+                <DialogFooter>
+                  <a href="mailto:enterprise@sentimentai.com">
+                    <Button className="w-full sm:w-auto">Contact Enterprise Team</Button>
+                  </a>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <Button variant="outline">Save Analysis</Button>
           </div>
         </div>
