@@ -26,8 +26,6 @@ import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import {
   Brain,
   ArrowLeft,
-  Download,
-  Share2,
   RefreshCw,
   PieChart,
   BarChart3,
@@ -418,14 +416,6 @@ export default function ResultsPage() {
             <Button variant="ghost" className="flex items-center gap-2" onClick={handleLogout}>
               Logout
             </Button>
-            <Button variant="ghost" className="flex items-center gap-2">
-              <Share2 className="w-4 h-4" />
-              Share Results
-            </Button>
-            <Button variant="outline" className="flex items-center gap-2 glass bg-transparent">
-              <Download className="w-4 h-4" />
-              Export Data
-            </Button>
             <GradientButton className="flex items-center gap-2 glow-hover" onClick={() => router.push("/analysis")}>
               <RefreshCw className="w-4 h-4" />
               New Analysis
@@ -665,14 +655,6 @@ export default function ResultsPage() {
                 Run New Analysis
               </GradientButton>
             </Link>
-            <Button size="lg" variant="outline" className="flex items-center gap-2 glass bg-transparent">
-              <Download className="w-4 h-4" />
-              Download Report
-            </Button>
-            <Button size="lg" variant="outline" className="flex items-center gap-2 glass bg-transparent">
-              <Share2 className="w-4 h-4" />
-              Share Results
-            </Button>
           </div>
         </div>
       </div>

@@ -124,7 +124,7 @@ export default function HomePage() {
               insights that matter for your business and research.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/analysis">
+              <Link href="/login">
                 <GradientButton size="lg" className="group glow-hover">
                   Try It Yourself
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -391,7 +391,7 @@ export default function HomePage() {
               Experience the power of AI-driven sentiment analysis. Start analyzing your text, comments, or YouTube
               content in seconds.
             </p>
-            <Link href="/analysis">
+            <Link href="/login">
               <GradientButton size="lg" className="group glow-hover">
                 Start Analyzing Now
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

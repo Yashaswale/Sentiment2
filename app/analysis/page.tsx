@@ -41,7 +41,6 @@ import {
   LinkIcon,
   Zap,
   BarChart3,
-  History,
 } from "lucide-react"
 
 type AnalysisType = "text" | "bulk" | "youtube"
@@ -194,16 +193,16 @@ export default function AnalysisPage() {
                   </p>
                   <p className="font-medium">
                     Email:{" "}
-                    <a href="mailto:enterprise@sentimentai.com" className="text-primary underline">
-                      enterprise@sentimentai.com
+                    <a href="mailto:sentimentsupport@gmail.com" className="text-primary underline">
+                      sentimentsupport@gmail.com
                     </a>
                   </p>
                   <p className="font-medium">
-                    Phone: <span className="text-foreground">+1 (000) 000-0000</span>
+                    Phone: <span className="text-foreground">+918788805367</span>
                   </p>
                 </div>
                 <DialogFooter>
-                  <a href="mailto:enterprise@sentimentai.com">
+                  <a href="mailto:sentimentsupport@gmail.com">
                     <Button className="w-full sm:w-auto">Contact Enterprise Team</Button>
                   </a>
                 </DialogFooter>
