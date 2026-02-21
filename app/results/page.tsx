@@ -331,6 +331,15 @@ export default function ResultsPage() {
       filtered = filtered.filter((comment) => comment.sentiment === sentimentFilter)
     }
 
+    // Sort by confidence: prioritize confidence > 75%, then by confidence descending
+    filtered = [...filtered].sort((a, b) => {
+      const aHigh = a.confidence > 0.75
+      const bHigh = b.confidence > 0.75
+      if (aHigh && !bHigh) return -1
+      if (!aHigh && bHigh) return 1
+      return b.confidence - a.confidence
+    })
+
     setFilteredComments(filtered)
   }, [results, searchQuery, sentimentFilter])
 
@@ -566,7 +575,7 @@ export default function ResultsPage() {
               <GlassCardHeader>
                 <GlassCardTitle className="flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-foreground" />
-                  Top 10 Comments Analysis ({Math.min(filteredComments.length, 10)})
+                  Top 20 Comments Analysis ({Math.min(filteredComments.length, 20)})
                 </GlassCardTitle>
                 <GlassCardDescription>
                   Detailed breakdown of the most relevant comments with search and filtering capabilities
@@ -579,7 +588,7 @@ export default function ResultsPage() {
                   {filteredComments.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">No comments match your search criteria</div>
                   ) : (
-                    filteredComments.slice(0, 10).map((comment, index) => (
+                    filteredComments.slice(0, 20).map((comment, index) => (
                       <GlassCard
                         key={comment.id}
                         className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:glow"
