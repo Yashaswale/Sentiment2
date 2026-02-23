@@ -1,5 +1,6 @@
 "use client"
 
+<<<<<<< HEAD
 import { Brain } from "lucide-react"
 import { AnimatedBlob } from "@/components/ui/animated-blob"
 import { Progress } from "@/components/ui/progress"
@@ -22,4 +23,24 @@ export default function Loading() {
       </div>
     </div>
   )
+=======
+import { useEffect, useState } from "react"
+import { ProcessingAnimation } from "@/components/ui/processing-animation"
+
+type AnalysisType = "text" | "bulk" | "youtube"
+
+export default function Loading() {
+  const [type, setType] = useState<AnalysisType>("text")
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const storedType = sessionStorage.getItem("analysisType") as AnalysisType | null
+    if (storedType === "text" || storedType === "bulk" || storedType === "youtube") {
+      setType(storedType)
+    }
+  }, [])
+
+  // Show the older emoji-style processing loader while the results route is loading
+  return <ProcessingAnimation isActive={true} type={type} />
+>>>>>>> 05732df (updated the pdf part)
 }

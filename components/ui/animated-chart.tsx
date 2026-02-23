@@ -54,6 +54,7 @@ export function AnimatedPieChart({ data, className }: AnimatedPieChartProps) {
           <Tooltip
             formatter={(value) => [`${value}%`, "Percentage"]}
             contentStyle={{
+<<<<<<< HEAD
               backgroundColor: "rgba(15,23,42,0.95)",
               border: "1px solid rgba(148,163,184,0.6)",
               borderRadius: "0.5rem",
@@ -61,6 +62,15 @@ export function AnimatedPieChart({ data, className }: AnimatedPieChartProps) {
             }}
             labelStyle={{ color: "#ffffff" }}
             itemStyle={{ color: "#ffffff" }}
+=======
+              backgroundColor: "var(--background)",
+              border: "1px solid var(--border)",
+              borderRadius: "0.5rem",
+              color: "var(--foreground)",
+            }}
+            labelStyle={{ color: "var(--foreground)" }}
+            itemStyle={{ color: "var(--foreground)" }}
+>>>>>>> 05732df (updated the pdf part)
           />
           <Legend 
             wrapperStyle={{ color: 'var(--foreground)' }}
@@ -104,6 +114,7 @@ export function AnimatedBarChart({ data, className }: AnimatedBarChartProps) {
           <Tooltip
             formatter={(value) => [`${value}%`, "Percentage"]}
             contentStyle={{
+<<<<<<< HEAD
               backgroundColor: "rgba(15,23,42,0.95)",
               border: "1px solid rgba(148,163,184,0.6)",
               borderRadius: "0.5rem",
@@ -111,6 +122,15 @@ export function AnimatedBarChart({ data, className }: AnimatedBarChartProps) {
             }}
             labelStyle={{ color: "#ffffff" }}
             itemStyle={{ color: "#ffffff" }}
+=======
+              backgroundColor: "var(--background)",
+              border: "1px solid var(--border)",
+              borderRadius: "0.5rem",
+              color: "var(--foreground)",
+            }}
+            labelStyle={{ color: "var(--foreground)" }}
+            itemStyle={{ color: "var(--foreground)" }}
+>>>>>>> 05732df (updated the pdf part)
           />
           <Bar dataKey="value" radius={[4, 4, 0, 0]} animationBegin={0} animationDuration={1500} />
         </BarChart>
