@@ -55,12 +55,56 @@ export default function AnalysisPage() {
   const [youtubeUrl, setYoutubeUrl] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
+  const [uploadedFileName, setUploadedFileName] = useState("")
   const router = useRouter()
   const headerRef = useScrollAnimation()
   const tabsRef = useScrollAnimation()
 
   const steps = ["Input", "Processing", "Results"]
   const youtubeSteps = ["Input", "Fetching", "Processing", "Results"]
+
+  // ── File upload handler for bulk comments ──────────────────────────────
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const text = e.target?.result as string
+      if (!text) return
+
+      let comments: string[] = []
+      const ext = file.name.split(".").pop()?.toLowerCase()
+
+      if (ext === "json") {
+        try {
+          const parsed = JSON.parse(text)
+          if (Array.isArray(parsed)) {
+            comments = parsed
+              .map((item: unknown) => (typeof item === "string" ? item.trim() : typeof item === "object" && item !== null && "text" in item ? String((item as Record<string, unknown>).text).trim() : typeof item === "object" && item !== null && "comment" in item ? String((item as Record<string, unknown>).comment).trim() : ""))
+              .filter((c: string) => c.length > 0)
+          }
+        } catch {
+          alert("Invalid JSON file. Please upload a valid JSON array.")
+          return
+        }
+      } else {
+        // CSV / TSV — split by newlines, then take first column (tab-separated)
+        const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
+        comments = lines.map((line) => {
+          // If line contains tabs, take the first column
+          const parts = line.split("\t")
+          return parts[0].trim()
+        }).filter((c) => c.length > 0)
+      }
+
+      if (comments.length === 0) {
+        alert("No comments found in the uploaded file.")
+        return
+      }
+
+      setBulkComments(comments.join("\n"))
+      setUploadedFileName(file.name)
+    }
+    reader.readAsText(file)
+  }
 
   const handleAnalysis = async (type: AnalysisType) => {
     setIsAnalyzing(true)
@@ -424,7 +468,7 @@ export default function AnalysisPage() {
                         placeholder={`Enter multiple comments, one per line:\n\nGreat product, highly recommend!\nNot what I expected, disappointed.\nAverage quality, nothing special.\nExcellent customer service!\nToo expensive for what you get.`}
                         value={bulkComments}
                         onChange={(e) => setBulkComments(e.target.value)}
-                        className="min-h-[250px] text-base leading-relaxed resize-none font-mono glass"
+                        className="min-h-[200px] text-base leading-relaxed resize-none font-mono glass"
                       />
                       <div className="flex justify-between text-sm text-muted-foreground">
                         <span>
@@ -440,16 +484,70 @@ export default function AnalysisPage() {
                       </div>
                     </div>
 
+                    {/* ── File Upload Zone ───────────────────────────────── */}
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium">Or upload a file</Label>
+                      <div
+                        onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-primary", "bg-primary/5") }}
+                        onDragLeave={(e) => { e.currentTarget.classList.remove("border-primary", "bg-primary/5") }}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          e.currentTarget.classList.remove("border-primary", "bg-primary/5")
+                          const file = e.dataTransfer.files?.[0]
+                          if (file) handleFileUpload(file)
+                        }}
+                        className="relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border p-6 transition-colors cursor-pointer hover:border-primary/60 hover:bg-primary/5"
+                        onClick={() => document.getElementById("bulk-file-input")?.click()}
+                      >
+                        <input
+                          id="bulk-file-input"
+                          type="file"
+                          accept=".csv,.tsv,.json"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) handleFileUpload(file)
+                            e.target.value = ""
+                          }}
+                        />
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Upload className="w-6 h-6 text-primary" />
+                        </div>
+                        {uploadedFileName ? (
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-green-500" />
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400">{uploadedFileName}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setUploadedFileName("")
+                              }}
+                              className="ml-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm font-medium">
+                              Drag &amp; drop or <span className="text-primary underline underline-offset-2">browse</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground">.csv (tab-separated) &nbsp;·&nbsp; .json (array of strings)</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="glass rounded-lg p-4">
                       <h4 className="font-medium mb-2 flex items-center gap-2">
                         <FileText className="w-4 h-4" />
                         Supported Formats
                       </h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• One comment per line</li>
-                        <li>• CSV format (comma-separated)</li>
-                        <li>• Tab-separated values</li>
-                        <li>• JSON array format</li>
+                        <li>• One comment per line (plain text)</li>
+                        <li>• CSV / TSV — tab-separated, first column extracted</li>
+                        <li>• JSON — array of strings, e.g. <code className="text-xs bg-muted px-1 rounded">[&quot;comment1&quot;, &quot;comment2&quot;]</code></li>
                       </ul>
                     </div>
 
