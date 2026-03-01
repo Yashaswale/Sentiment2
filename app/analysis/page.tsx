@@ -41,6 +41,9 @@ import {
   LinkIcon,
   Zap,
   BarChart3,
+  Check,
+  Crown,
+  Building2,
 } from "lucide-react"
 
 type AnalysisType = "text" | "bulk" | "youtube"
@@ -172,43 +175,114 @@ export default function AnalysisPage() {
             >
               Logout
             </Button>
+            {/* Premium Plan button with golden border */}
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 border-2 hover:scale-105 transition-transform"
+                  style={{
+                    borderColor: "#d4af37",
+                    color: "#d4af37",
+                    boxShadow: "0 0 8px rgba(212,175,55,0.3)",
+                  }}
+                >
                   <Sparkles className="w-4 h-4" />
-                  Premium
+                  Premium Plan
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-6xl w-full py-8">
                 <DialogHeader>
-                  <DialogTitle>Enterprise Premium Access</DialogTitle>
-                  <DialogDescription>
-                    Unlock advanced features, higher limits, dedicated support, and custom integrations for your team.
+                  <DialogTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+                    <Sparkles className="w-6 h-6 text-yellow-500" />
+                    Choose Your Plan
+                  </DialogTitle>
+                  <DialogDescription className="text-center text-base">
+                    Unlock the full power of AI-driven sentiment analysis
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-3 text-sm">
-                  <p>
-                    Share your requirements and we&apos;ll get back to you with a tailored enterprise solution, pricing,
-                    and onboarding plan.
-                  </p>
-                  <p className="font-medium">
-                    Email:{" "}
-                    <a href="mailto:sentimentsupport@gmail.com" className="text-primary underline">
-                      sentimentsupport@gmail.com
-                    </a>
-                  </p>
-                  <p className="font-medium">
-                    Phone: <span className="text-foreground">+918788805367</span>
-                  </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
+                  {[
+
+                    {
+                      name: "Starter",
+                      icon: <Zap className="w-5 h-5" />,
+                      price: "$9",
+                      period: "/month",
+                      color: "from-blue-500 to-cyan-500",
+                      border: "border-blue-300 dark:border-blue-700",
+                      features: ["500 analyses / month", "Text & Bulk analysis", "Basic PDF reports", "Email support"],
+                      cta: "Get Started",
+                    },
+                    {
+                      name: "Booster",
+                      icon: <Crown className="w-5 h-5" />,
+                      price: "$29",
+                      period: "/month",
+                      color: "from-violet-600 to-purple-600",
+                      border: "border-violet-400 dark:border-violet-500",
+                      popular: true,
+                      features: ["5,000 analyses / month", "Text, Bulk & YouTube", "Premium branded PDF reports", "Word Cloud & Advanced charts", "Priority support"],
+                      cta: "Upgrade Now",
+                    },
+                    {
+                      name: "Enterprise",
+                      icon: <Building2 className="w-5 h-5" />,
+                      price: "$99",
+                      period: "/month",
+                      color: "from-amber-500 to-yellow-500",
+                      border: "border-amber-300 dark:border-amber-600",
+                      features: ["Unlimited analyses", "All analysis types", "White-label PDF reports", "API access & webhooks", "Dedicated account manager", "Custom integrations"],
+                      cta: "Contact Sales",
+                    },
+                  ].map((plan) => (
+                    <div
+                      key={plan.name}
+                      className={`relative rounded-xl border-2 ${plan.border} p-5 flex flex-col gap-3 ${plan.popular ? "shadow-lg scale-[1.03]" : ""
+                        }`}
+                    >
+                      {plan.popular && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          Most Popular
+                        </div>
+                      )}
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center text-white`}>
+                        {plan.icon}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold">{plan.name}</h3>
+                        <div className="flex items-end gap-1">
+                          <span className="text-3xl font-extrabold">{plan.price}</span>
+                          <span className="text-muted-foreground text-sm mb-1">{plan.period}</span>
+                        </div>
+                      </div>
+                      <ul className="space-y-2 flex-1">
+                        {plan.features.map((f) => (
+                          <li key={f} className="flex items-start gap-2 text-sm">
+                            <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        className={`w-full mt-2 py-2 rounded-lg text-sm font-bold text-white bg-gradient-to-r ${plan.color} hover:opacity-90 transition-opacity`}
+                      >
+                        {plan.cta}
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <DialogFooter>
-                  <a href="mailto:sentimentsupport@gmail.com">
-                    <Button className="w-full sm:w-auto">Contact Enterprise Team</Button>
-                  </a>
+
+                <DialogFooter className="mt-2 text-center">
+                  <p className="text-xs text-muted-foreground w-full text-center">
+                    All plans include 14-day free trial. No credit card required.{" "}
+                    <a href="mailto:sentimentsupport@gmail.com" className="underline text-primary">Contact us</a>{" "}
+                    for custom pricing.
+                  </p>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            <Button variant="outline">Save Analysis</Button>
           </div>
         </div>
       </nav>

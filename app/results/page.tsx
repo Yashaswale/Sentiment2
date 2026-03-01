@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -18,11 +18,19 @@ import { AnimatedPieChart, AnimatedBarChart } from "@/components/ui/animated-cha
 import { EnhancedSentimentIcon } from "@/components/ui/enhanced-sentiment-icons"
 import { WordCloud } from "@/components/ui/word-cloud"
 import { SearchFilter } from "@/components/ui/search-filter"
-import { HistoryDropdown } from "@/components/ui/history-dropdown"
 import { Confetti } from "@/components/ui/confetti"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { AnimatedBlob } from "@/components/ui/animated-blob"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Brain,
   ArrowLeft,
@@ -35,6 +43,11 @@ import {
   ThumbsUp,
   Clock,
   Cloud,
+  Sparkles,
+  Check,
+  Zap,
+  Crown,
+  Building2,
 } from "lucide-react"
 
 interface AnalysisData {
@@ -73,17 +86,10 @@ const drawRoundedRect = (
   doc.roundedRect(x, y, w, h, r, r, style)
 }
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result
-    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
-    : [0, 0, 0]
-}
-
 const SENTIMENT_COLORS = {
   positive: { hex: "#22c55e", rgb: [34, 197, 94] as [number, number, number] },
   negative: { hex: "#ef4444", rgb: [239, 68, 68] as [number, number, number] },
-  neutral:  { hex: "#f59e0b", rgb: [245, 158, 11] as [number, number, number] },
+  neutral: { hex: "#f59e0b", rgb: [245, 158, 11] as [number, number, number] },
 }
 
 const drawPieChart = (
@@ -104,7 +110,6 @@ const drawPieChart = (
     const endAngle = startAngle + angle
     const steps = Math.max(8, Math.floor(angle * 20))
 
-    // Build arc path points
     const points: [number, number][] = [[cx, cy]]
     for (let i = 0; i <= steps; i++) {
       const a = startAngle + (angle * i) / steps
@@ -120,7 +125,6 @@ const drawPieChart = (
       "F"
     )
 
-    // Fill in remaining triangles to approximate the sector
     for (let i = 2; i < points.length - 1; i++) {
       doc.triangle(
         cx, cy,
@@ -150,12 +154,10 @@ const generatePDF = async (
   const PH = doc.internal.pageSize.getHeight()  // 297
   const ML = 16
   const MR = PW - ML
-  const CW = PW - ML * 2  // content width
+  const CW = PW - ML * 2
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
   const newPage = () => {
     doc.addPage()
-    // Subtle header stripe on continuation pages
     doc.setFillColor(249, 250, 251)
     doc.rect(0, 0, PW, 10, "F")
     doc.setFillColor(99, 102, 241)
@@ -169,112 +171,158 @@ const generatePDF = async (
   let y = 0
 
   // ══════════════════════════════════════════════════════════════════════════
-  // PAGE 1 – COVER / HEADER
+  // PAGE 1 – PREMIUM COVER
   // ══════════════════════════════════════════════════════════════════════════
 
-  // Deep indigo header block
-  doc.setFillColor(67, 56, 202)
-  doc.rect(0, 0, PW, 58, "F")
+  // Deep gradient header block
+  doc.setFillColor(30, 27, 75)
+  doc.rect(0, 0, PW, 80, "F")
 
-  // Decorative accent circle (top-right)
+  // Gradient overlay strip
+  doc.setFillColor(67, 56, 202)
+  doc.rect(0, 0, PW, 50, "F")
+
+  // Decorative accent circles
   doc.setFillColor(99, 102, 241)
-  doc.circle(PW - 8, 8, 22, "F")
+  doc.circle(PW - 12, 12, 28, "F")
   doc.setFillColor(129, 140, 248)
-  doc.circle(PW + 2, 0, 14, "F")
+  doc.circle(PW, 0, 18, "F")
+  doc.setFillColor(79, 70, 229)
+  doc.circle(20, 75, 15, "F")
+  doc.setFillColor(109, 100, 239)
+  doc.circle(0, 60, 10, "F")
+
+  // Fetch logo image and convert to base64
+  let logoDataUrl: string | null = null
+  try {
+    const logoResp = await fetch("https://res.cloudinary.com/drkhfntxp/image/upload/v1772340843/WhatsApp_Image_2026-03-01_at_10.02.29_AM_vrckdm.jpg")
+    const logoBlob = await logoResp.blob()
+    logoDataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.readAsDataURL(logoBlob)
+    })
+  } catch {
+    // If fetch fails, we'll skip the logo
+  }
 
   // Logo badge
-  doc.setFillColor(236, 72, 153)
-  drawRoundedRect(doc, ML, 12, 10, 10, 2, "F")
-  doc.setFontSize(8)
-  doc.setTextColor(255, 255, 255)
-  doc.text("SA", ML + 5, 18.5, { align: "center" })
+  if (logoDataUrl) {
+    // White background with padding around logo
+    doc.setFillColor(255, 255, 255)
+    drawRoundedRect(doc, ML, 8, 24, 24, 4, "F")
+    doc.addImage(logoDataUrl, "JPEG", ML + 3, 11, 18, 18)
+  } else {
+    // Fallback pink badge
+    doc.setFillColor(236, 72, 153)
+    drawRoundedRect(doc, ML, 14, 12, 12, 2.5, "F")
+    doc.setFontSize(9)
+    doc.setFont("helvetica", "bold")
+    doc.setTextColor(255, 255, 255)
+    doc.text("SA", ML + 6, 21.5, { align: "center" })
+  }
 
-  // Title
-  doc.setFontSize(22)
+  // Company name
+  doc.setFontSize(24)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(255, 255, 255)
-  doc.text("SentimentAI", ML + 14, 19)
+  doc.text("SentimentAI", ML + 28, 22)
 
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(199, 210, 254)
-  doc.text("Analysis Report", ML + 14, 26)
+  doc.text("Advanced NLP Analysis Platform", ML + 28, 29)
 
   // Divider line
   doc.setDrawColor(129, 140, 248)
-  doc.setLineWidth(0.4)
-  doc.line(ML, 33, MR, 33)
+  doc.setLineWidth(0.5)
+  doc.line(ML, 36, MR, 36)
 
-  // Meta row
+  // Meta info row
   const typeLabel =
     analysisData.type === "text" ? "Text Analysis"
-    : analysisData.type === "bulk" ? "Bulk Comments"
-    : "YouTube Comments"
+      : analysisData.type === "bulk" ? "Bulk Comments Analysis"
+        : "YouTube Comments Analysis"
 
-  doc.setFontSize(9)
+  doc.setFontSize(9.5)
   doc.setTextColor(199, 210, 254)
-  doc.text(`Type: ${typeLabel}`, ML, 41)
-  doc.text(`Generated: ${new Date().toLocaleString()}`, ML, 48)
-  doc.text(`Total Items Analyzed: ${results.sentiment.total}`, ML + 90, 41)
+  doc.text(`Analysis Type: ${typeLabel}`, ML, 44)
+  doc.text(`Generated: ${new Date().toLocaleString()}`, ML, 51)
+  doc.text(`Total Items Analyzed: ${results.sentiment.total}`, ML, 58)
+
+  // "CONFIDENTIAL" badge
+  doc.setFillColor(236, 72, 153)
+  drawRoundedRect(doc, MR - 40, 43, 38, 8, 4, "F")
+  doc.setFontSize(7.5)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(255, 255, 255)
+  doc.text("CONFIDENTIAL", MR - 21, 48.5, { align: "center" })
 
   // ── Summary Score Cards ─────────────────────────────────────────────────
-  y = 68
+  y = 92
 
   const cards = [
-    { label: "Positive", pct: results.sentiment.positive, color: SENTIMENT_COLORS.positive.rgb, bg: [220, 252, 231] as [number,number,number] },
-    { label: "Negative", pct: results.sentiment.negative, color: SENTIMENT_COLORS.negative.rgb, bg: [254, 226, 226] as [number,number,number] },
-    { label: "Neutral",  pct: results.sentiment.neutral,  color: SENTIMENT_COLORS.neutral.rgb,  bg: [254, 243, 199] as [number,number,number] },
+    { label: "Positive", pct: results.sentiment.positive, color: SENTIMENT_COLORS.positive.rgb, bg: [209, 250, 229] as [number, number, number], accent: [34, 197, 94] as [number, number, number] },
+    { label: "Negative", pct: results.sentiment.negative, color: SENTIMENT_COLORS.negative.rgb, bg: [254, 226, 226] as [number, number, number], accent: [239, 68, 68] as [number, number, number] },
+    { label: "Neutral", pct: results.sentiment.neutral, color: SENTIMENT_COLORS.neutral.rgb, bg: [254, 243, 199] as [number, number, number], accent: [245, 158, 11] as [number, number, number] },
   ]
 
   const cardW = (CW - 8) / 3
   cards.forEach((card, i) => {
     const cx = ML + i * (cardW + 4)
-    doc.setFillColor(...card.bg)
-    drawRoundedRect(doc, cx, y, cardW, 26, 3, "F")
 
-    doc.setFillColor(...card.color)
-    drawRoundedRect(doc, cx, y, cardW, 6, 3, "F")
+    // Card shadow (slight offset)
+    doc.setFillColor(220, 220, 230)
+    drawRoundedRect(doc, cx + 1.5, y + 1.5, cardW, 32, 4, "F")
+
+    // Card BG
+    doc.setFillColor(...card.bg)
+    drawRoundedRect(doc, cx, y, cardW, 32, 4, "F")
+
+    // Top accent bar
+    doc.setFillColor(...card.accent)
+    drawRoundedRect(doc, cx, y, cardW, 6, 4, "F")
     doc.rect(cx, y + 3, cardW, 3, "F")
 
-    doc.setFontSize(18)
+    // Percentage value
+    doc.setFontSize(22)
     doc.setFont("helvetica", "bold")
     doc.setTextColor(...card.color)
-    doc.text(`${card.pct}%`, cx + cardW / 2, y + 19, { align: "center" })
+    doc.text(`${card.pct}%`, cx + cardW / 2, y + 23, { align: "center" })
 
-    doc.setFontSize(8)
+    // Label
+    doc.setFontSize(9)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(75, 85, 99)
-    doc.text(card.label, cx + cardW / 2, y + 25, { align: "center" })
+    doc.text(card.label, cx + cardW / 2, y + 30, { align: "center" })
   })
 
-  y += 36
+  y += 44
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // SECTION HEADER helper
-  // ══════════════════════════════════════════════════════════════════════════
+  // ===== SECTION HEADER HELPER =====
   const sectionHeader = (title: string, subtitle?: string) => {
     doc.setFillColor(238, 242, 255)
-    drawRoundedRect(doc, ML, y, CW, subtitle ? 14 : 10, 2, "F")
+    drawRoundedRect(doc, ML, y, CW, subtitle ? 16 : 12, 3, "F")
     doc.setFillColor(99, 102, 241)
-    doc.rect(ML, y, 3, subtitle ? 14 : 10, "F")
-    drawRoundedRect(doc, ML, y, 3, subtitle ? 14 : 10, 1, "F")
+    doc.rect(ML, y, 3.5, subtitle ? 16 : 12, "F")
+    drawRoundedRect(doc, ML, y, 3.5, subtitle ? 16 : 12, 1.5, "F")
 
-    doc.setFontSize(11)
+    doc.setFontSize(12)
     doc.setFont("helvetica", "bold")
     doc.setTextColor(55, 48, 163)
-    doc.text(title, ML + 7, y + 7)
+    doc.text(title, ML + 8, y + 8)
 
     if (subtitle) {
-      doc.setFontSize(7.5)
+      doc.setFontSize(8)
       doc.setFont("helvetica", "normal")
       doc.setTextColor(107, 114, 128)
-      doc.text(subtitle, ML + 7, y + 12)
+      doc.text(subtitle, ML + 8, y + 14)
     }
-    y += (subtitle ? 14 : 10) + 6
+    y += (subtitle ? 16 : 12) + 7
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // PIE CHART  +  BAR CHART (side by side)
+  // SENTIMENT DISTRIBUTION CHARTS (Side by side)
   // ══════════════════════════════════════════════════════════════════════════
   sectionHeader("Sentiment Distribution", "Visual breakdown of all analyzed content")
 
@@ -285,80 +333,139 @@ const generatePDF = async (
   doc.setFillColor(250, 250, 255)
   doc.setDrawColor(226, 232, 240)
   doc.setLineWidth(0.3)
-  drawRoundedRect(doc, ML, y, halfW, 72, 3, "FD")
+  drawRoundedRect(doc, ML, y, halfW, 78, 3, "FD")
 
-  doc.setFontSize(8.5)
+  doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(67, 56, 202)
-  doc.text("Distribution", ML + halfW / 2, y + 8, { align: "center" })
+  doc.text("Distribution (Donut)", ML + halfW / 2, y + 9, { align: "center" })
 
-  // Draw donut pie
   const pieData = [
     { label: "Positive", value: results.sentiment.positive, color: SENTIMENT_COLORS.positive.rgb },
     { label: "Negative", value: results.sentiment.negative, color: SENTIMENT_COLORS.negative.rgb },
-    { label: "Neutral",  value: results.sentiment.neutral,  color: SENTIMENT_COLORS.neutral.rgb  },
+    { label: "Neutral", value: results.sentiment.neutral, color: SENTIMENT_COLORS.neutral.rgb },
   ]
-  drawPieChart(doc, ML + halfW / 2, y + 37, 22, pieData)
+  drawPieChart(doc, ML + halfW / 2, y + 42, 24, pieData)
 
-  // Pie legend
-  let legendY = y + 62
+  let legendY = y + 67
   pieData.forEach((d, i) => {
     const lx = ML + 6 + i * (halfW / 3)
     doc.setFillColor(...d.color)
-    doc.rect(lx, legendY, 4, 3, "F")
+    doc.rect(lx, legendY, 4.5, 3.5, "F")
     doc.setFontSize(6.5)
     doc.setTextColor(75, 85, 99)
-    doc.text(`${d.label} ${d.value}%`, lx + 5.5, legendY + 2.5)
+    doc.text(`${d.label} ${d.value}%`, lx + 6, legendY + 3)
   })
 
   // Bar chart box
   const bx = ML + halfW + 6
   doc.setFillColor(250, 250, 255)
   doc.setDrawColor(226, 232, 240)
-  drawRoundedRect(doc, bx, chartSectionY, halfW, 72, 3, "FD")
+  drawRoundedRect(doc, bx, chartSectionY, halfW, 78, 3, "FD")
 
-  doc.setFontSize(8.5)
+  doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(67, 56, 202)
-  doc.text("Comparison", bx + halfW / 2, chartSectionY + 8, { align: "center" })
+  doc.text("Comparison (Bar)", bx + halfW / 2, chartSectionY + 9, { align: "center" })
 
-  // Draw horizontal bars
   const barData = [
     { label: "Positive", value: results.sentiment.positive, color: SENTIMENT_COLORS.positive.rgb },
     { label: "Negative", value: results.sentiment.negative, color: SENTIMENT_COLORS.negative.rgb },
-    { label: "Neutral",  value: results.sentiment.neutral,  color: SENTIMENT_COLORS.neutral.rgb  },
+    { label: "Neutral", value: results.sentiment.neutral, color: SENTIMENT_COLORS.neutral.rgb },
   ]
-  const maxBarW = halfW - 32
-  let barY = chartSectionY + 18
+  const maxBarW = halfW - 34
+  let barY = chartSectionY + 19
 
   barData.forEach((bar) => {
     const barFill = (bar.value / 100) * maxBarW
 
-    doc.setFontSize(7.5)
+    doc.setFontSize(8)
     doc.setFont("helvetica", "bold")
     doc.setTextColor(75, 85, 99)
-    doc.text(bar.label, bx + 6, barY + 3.5)
+    doc.text(bar.label, bx + 6, barY + 4)
 
     // Track
     doc.setFillColor(229, 231, 235)
-    drawRoundedRect(doc, bx + 26, barY, maxBarW, 7, 1.5, "F")
+    drawRoundedRect(doc, bx + 28, barY, maxBarW, 7.5, 2, "F")
 
     // Fill
     if (barFill > 0) {
       doc.setFillColor(...bar.color)
-      drawRoundedRect(doc, bx + 26, barY, barFill, 7, 1.5, "F")
+      drawRoundedRect(doc, bx + 28, barY, barFill, 7.5, 2, "F")
     }
 
     // Percentage label
-    doc.setFontSize(6.5)
+    doc.setFontSize(7)
     doc.setFont("helvetica", "bold")
     doc.setTextColor(55, 65, 81)
-    doc.text(`${bar.value}%`, bx + 26 + maxBarW + 2, barY + 5)
+    doc.text(`${bar.value}%`, bx + 28 + maxBarW + 3, barY + 5)
 
-    barY += 14
+    barY += 16
   })
 
-  y = chartSectionY + 72 + 10
+  y = chartSectionY + 78 + 12
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PAGE 2 – SENTIMENT ANALYSIS THEORY
+  // ══════════════════════════════════════════════════════════════════════════
+  y = newPage()
+  sectionHeader("About Sentiment Analysis", "Understanding the science behind this report")
+
+  const theoryBlocks = [
+    {
+      title: "What is Sentiment Analysis?",
+      body: "Sentiment Analysis (also known as Opinion Mining) is a Natural Language Processing (NLP) technique used to identify and extract subjective information from text. It determines whether the expressed opinion is positive, negative, or neutral. Modern sentiment analysis systems use transformer-based deep learning models (such as BERT, RoBERTa, and GPT variants) that are pre-trained on massive corpora and fine-tuned on domain-specific labeled datasets.",
+    },
+    {
+      title: "How It Works",
+      body: "The pipeline involves: (1) Text Preprocessing – tokenization, stop-word removal, stemming/lemmatization. (2) Feature Extraction – converting tokens into numerical embeddings using contextual word vectors. (3) Classification – a neural network head predicts sentiment polarity and assigns a confidence score (0–1) representing certainty. Scores above 0.60 are considered high-confidence predictions.",
+    },
+    {
+      title: "Interpreting Confidence Scores",
+      body: "Confidence score reflects the model's certainty in its prediction. A score of 0.90+ indicates very high certainty. Scores between 0.60–0.89 are considered reliable. Scores below 0.60 may indicate ambiguous language, sarcasm, domain-specific jargon, or mixed sentiment — these are excluded from the high-confidence report view to maintain quality.",
+    },
+    {
+      title: "Applications & Industry Use Cases",
+      body: "Sentiment analysis powers brand monitoring, customer feedback management, social media listening, product review analysis, market research, and political opinion tracking. Enterprises use it to measure Net Promoter Score (NPS) trends, detect PR crises early, and understand audience reactions to campaigns or product launches in real time.",
+    },
+    {
+      title: "Limitations & Ethical Considerations",
+      body: "No model achieves 100% accuracy. Sentiment analysis may struggle with sarcasm, cultural idioms, code-switching, and domain-specific language. Results should be interpreted in context and not used as the sole basis for major business decisions. Data privacy regulations (GDPR, CCPA) must be observed when processing user-generated content.",
+    },
+  ]
+
+  for (const block of theoryBlocks) {
+    const titleLines = doc.splitTextToSize(block.title, CW - 8)
+    const bodyLines = doc.splitTextToSize(block.body, CW - 12)
+    const blockH = titleLines.length * 6 + bodyLines.length * 5 + 16
+
+    if (y + blockH > PH - 16) y = newPage()
+
+    // Block card
+    doc.setFillColor(250, 250, 255)
+    doc.setDrawColor(226, 232, 240)
+    doc.setLineWidth(0.3)
+    drawRoundedRect(doc, ML, y, CW, blockH, 3, "FD")
+
+    // Left color accent
+    doc.setFillColor(99, 102, 241)
+    doc.rect(ML, y + 2, 3, blockH - 4, "F")
+    drawRoundedRect(doc, ML, y + 2, 3, blockH - 4, 1.5, "F")
+
+    // Title
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "bold")
+    doc.setTextColor(55, 48, 163)
+    doc.text(titleLines, ML + 8, y + 8)
+
+    // Body
+    doc.setFontSize(8.5)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(55, 65, 81)
+    doc.text(bodyLines, ML + 8, y + 8 + titleLines.length * 6 + 2)
+
+    y += blockH + 7
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // INPUT PREVIEW
@@ -366,10 +473,6 @@ const generatePDF = async (
   if (analysisData.data) {
     if (y > PH - 50) y = newPage()
     sectionHeader("Input Preview")
-
-    doc.setFillColor(249, 250, 251)
-    doc.setDrawColor(229, 231, 235)
-    drawRoundedRect(doc, ML, y, CW, 1, 2, "F") // placeholder height, redrawn after
 
     const previewText = analysisData.data.length > 300
       ? `${analysisData.data.slice(0, 300)}…`
@@ -379,25 +482,25 @@ const generatePDF = async (
     doc.setFontSize(8.5)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(55, 65, 81)
-    const lines = doc.splitTextToSize(cleanText, CW - 8)
-    const boxH = lines.length * 5 + 8
+    const previewLines = doc.splitTextToSize(cleanText, CW - 8)
+    const boxH = previewLines.length * 5 + 10
 
     doc.setFillColor(249, 250, 251)
     doc.setDrawColor(229, 231, 235)
     doc.setLineWidth(0.3)
     drawRoundedRect(doc, ML, y, CW, boxH, 3, "FD")
-    doc.text(lines, ML + 4, y + 7)
-    y += boxH + 10
+    doc.text(previewLines, ML + 4, y + 8)
+    y += boxH + 12
   }
 
   // ══════════════════════════════════════════════════════════════════════════
   // TOP COMMENTS
   // ══════════════════════════════════════════════════════════════════════════
   if (y > PH - 60) y = newPage()
-  sectionHeader("Top 5 Comments Analysis", "Comments with ≥ 70% confidence, ranked by confidence score")
+  sectionHeader("Top High-Confidence Comments", "Comments with ≥ 60% confidence, ranked by score")
 
   const commentsToShow = (filteredComments.length ? filteredComments : results.comments)
-    .filter((c) => c.confidence >= 0.7)
+    .filter((c) => c.confidence >= 0.6)
     .slice(0, 5)
 
   const cleanCommentText = (text: string) =>
@@ -407,14 +510,25 @@ const generatePDF = async (
       .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
       .replace(/[^\x20-\x7E]/g, "")
 
+  if (commentsToShow.length === 0) {
+    doc.setFontSize(9)
+    doc.setTextColor(107, 114, 128)
+    doc.text("No high-confidence comments available.", ML, y + 4)
+    y += 14
+  }
+
   commentsToShow.forEach((comment, index) => {
     const commentText = cleanCommentText(comment.text)
     const lines = doc.splitTextToSize(commentText, CW - 30)
-    const rowH = lines.length * 5 + 14
+    const rowH = lines.length * 5 + 16
 
     if (y + rowH > PH - 16) y = newPage()
 
     const sentColor = SENTIMENT_COLORS[comment.sentiment]
+
+    // Card shadow
+    doc.setFillColor(230, 230, 245)
+    drawRoundedRect(doc, ML + 1.5, y + 1.5, CW, rowH, 3, "F")
 
     // Card background
     doc.setFillColor(250, 250, 255)
@@ -424,68 +538,241 @@ const generatePDF = async (
 
     // Left accent stripe
     doc.setFillColor(...sentColor.rgb)
-    doc.rect(ML, y + 2, 3, rowH - 4, "F")
-    drawRoundedRect(doc, ML, y + 2, 3, rowH - 4, 1.5, "F")
+    doc.rect(ML, y + 2, 3.5, rowH - 4, "F")
+    drawRoundedRect(doc, ML, y + 2, 3.5, rowH - 4, 1.5, "F")
 
     // Index badge
     doc.setFillColor(67, 56, 202)
-    doc.circle(ML + 11, y + 7, 4.5, "F")
-    doc.setFontSize(7)
+    doc.circle(ML + 12, y + 8, 5, "F")
+    doc.setFontSize(8)
     doc.setFont("helvetica", "bold")
     doc.setTextColor(255, 255, 255)
-    doc.text(String(index + 1), ML + 11, y + 8.5, { align: "center" })
+    doc.text(String(index + 1), ML + 12, y + 9.5, { align: "center" })
 
     // Sentiment badge pill
     const sentLabel = comment.sentiment.charAt(0).toUpperCase() + comment.sentiment.slice(1)
     const confPct = Math.round(comment.confidence * 100)
     doc.setFillColor(...sentColor.rgb)
-    drawRoundedRect(doc, ML + 20, y + 3, 22, 7, 3.5, "F")
-    doc.setFontSize(7)
+    drawRoundedRect(doc, ML + 22, y + 4, 24, 7.5, 3.75, "F")
+    doc.setFontSize(7.5)
     doc.setFont("helvetica", "bold")
     doc.setTextColor(255, 255, 255)
-    doc.text(sentLabel, ML + 31, y + 7.5, { align: "center" })
+    doc.text(sentLabel, ML + 34, y + 8.5, { align: "center" })
 
-    // Confidence
+    // Confidence text
     doc.setFontSize(7.5)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(107, 114, 128)
-    doc.text(`${confPct}% confidence`, ML + 46, y + 7.5)
+    doc.text(`${confPct}% confidence`, ML + 50, y + 8.5)
 
     // Comment text
     doc.setFontSize(8.5)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(31, 41, 55)
-    doc.text(lines, ML + 6, y + 14)
+    doc.text(lines, ML + 6, y + 16)
 
-    // Confidence mini-bar
-    const barTrackW = 30
-    const barFill = (comment.confidence) * barTrackW
+    // Confidence mini-bar (top-right)
+    const barTrackW = 32
+    const barFill = comment.confidence * barTrackW
     doc.setFillColor(229, 231, 235)
-    drawRoundedRect(doc, MR - barTrackW - 2, y + 3.5, barTrackW, 4, 2, "F")
+    drawRoundedRect(doc, MR - barTrackW - 2, y + 4, barTrackW, 4.5, 2.25, "F")
     doc.setFillColor(...sentColor.rgb)
-    drawRoundedRect(doc, MR - barTrackW - 2, y + 3.5, barFill, 4, 2, "F")
+    drawRoundedRect(doc, MR - barTrackW - 2, y + 4, barFill, 4.5, 2.25, "F")
 
-    y += rowH + 4
+    y += rowH + 5
   })
 
   // ══════════════════════════════════════════════════════════════════════════
-  // FOOTER on last page
+  // KEY INSIGHTS SUMMARY BOX
+  // ══════════════════════════════════════════════════════════════════════════
+  if (y > PH - 60) y = newPage()
+  sectionHeader("Key Insights", "AI-generated summary of your analysis results")
+
+  const dominant = results.sentiment.positive >= results.sentiment.negative && results.sentiment.positive >= results.sentiment.neutral
+    ? "positive" : results.sentiment.negative >= results.sentiment.positive && results.sentiment.negative >= results.sentiment.neutral
+      ? "negative" : "neutral"
+  const dominantPct = results.sentiment[dominant]
+  const insightLines = doc.splitTextToSize(
+    `Overall sentiment is predominantly ${dominant.toUpperCase()} at ${dominantPct}%. ` +
+    `Out of ${results.sentiment.total} analyzed items, ${Math.round(results.sentiment.total * results.sentiment.positive / 100)} were positive, ` +
+    `${Math.round(results.sentiment.total * results.sentiment.negative / 100)} were negative, and ` +
+    `${Math.round(results.sentiment.total * results.sentiment.neutral / 100)} were neutral. ` +
+    (results.sentiment.positive > 60 ? "Strong positive sentiment indicates high satisfaction and approval." :
+      results.sentiment.negative > 60 ? "High negative sentiment signals areas requiring immediate attention and improvement." :
+        "Mixed sentiment distribution suggests diverse opinions — further segmentation recommended."),
+    CW - 12
+  )
+  const insightH = insightLines.length * 5.5 + 14
+
+  doc.setFillColor(238, 242, 255)
+  doc.setDrawColor(199, 210, 254)
+  doc.setLineWidth(0.4)
+  drawRoundedRect(doc, ML, y, CW, insightH, 4, "FD")
+  doc.setFillColor(99, 102, 241)
+  drawRoundedRect(doc, ML, y, CW, 6, 4, "F")
+  doc.rect(ML, y + 3, CW, 3, "F")
+
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(55, 48, 163)
+  doc.text(insightLines, ML + 6, y + 14)
+  y += insightH + 10
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PREMIUM FOOTER on every page
   // ══════════════════════════════════════════════════════════════════════════
   const totalPages = (doc as any).internal.getNumberOfPages()
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p)
     doc.setFillColor(249, 250, 251)
-    doc.rect(0, PH - 10, PW, 10, "F")
-    doc.setDrawColor(226, 232, 240)
-    doc.setLineWidth(0.3)
-    doc.line(ML, PH - 10, MR, PH - 10)
+    doc.rect(0, PH - 13, PW, 13, "F")
+    doc.setFillColor(67, 56, 202)
+    doc.rect(0, PH - 13, PW, 1.5, "F")
     doc.setFontSize(7)
     doc.setTextColor(156, 163, 175)
-    doc.text("Generated by SentimentAI  ·  AI-powered sentiment insights", ML, PH - 4)
-    doc.text(`Page ${p} of ${totalPages}`, MR, PH - 4, { align: "right" })
+    doc.text("Generated by SentimentAI  ·  AI-powered NLP Sentiment Analysis Platform", ML, PH - 5)
+    doc.text(`Page ${p} of ${totalPages}`, MR, PH - 5, { align: "right" })
   }
 
-  doc.save("sentiment-analysis-report.pdf")
+  doc.save("sentimentai-analysis-report.pdf")
+}
+
+// ─── PREMIUM PLAN DIALOG ─────────────────────────────────────────────────────
+
+function PremiumPlansDialog() {
+  const plans = [
+    {
+      name: "Starter",
+      icon: <Zap className="w-5 h-5" />,
+      price: "$9",
+      period: "/month",
+      color: "from-blue-500 to-cyan-500",
+      border: "border-blue-300 dark:border-blue-700",
+      features: [
+        "500 analyses / month",
+        "Text & Bulk analysis",
+        "Basic PDF reports",
+        "Email support",
+      ],
+      cta: "Get Started",
+    },
+    {
+      name: "Booster",
+      icon: <Crown className="w-5 h-5" />,
+      price: "$29",
+      period: "/month",
+      color: "from-violet-600 to-purple-600",
+      border: "border-violet-400 dark:border-violet-500",
+      popular: true,
+      features: [
+        "5,000 analyses / month",
+        "Text, Bulk & YouTube",
+        "Premium branded PDF reports",
+        "Word Cloud & Advanced charts",
+        "Priority support",
+      ],
+      cta: "Upgrade Now",
+    },
+    {
+      name: "Enterprise",
+      icon: <Building2 className="w-5 h-5" />,
+      price: "$99",
+      period: "/month",
+      color: "from-amber-500 to-yellow-500",
+      border: "border-amber-300 dark:border-amber-600",
+      features: [
+        "Unlimited analyses",
+        "All analysis types",
+        "White-label PDF reports",
+        "API access & webhooks",
+        "Dedicated account manager",
+        "Custom integrations",
+      ],
+      cta: "Contact Sales",
+    },
+  ]
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="flex items-center gap-2 border-2 hover:scale-105 transition-transform"
+          style={{
+            borderColor: "#d4af37",
+            color: "#d4af37",
+            boxShadow: "0 0 8px rgba(212,175,55,0.3)",
+          }}
+        >
+          <Sparkles className="w-4 h-4" />
+          Premium Plan
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-5xl w-full">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+            <Sparkles className="w-6 h-6 text-yellow-500" />
+            Choose Your Plan
+          </DialogTitle>
+          <DialogDescription className="text-center text-base">
+            Unlock the full power of AI-driven sentiment analysis
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative rounded-xl border-2 ${plan.border} p-6 flex flex-col gap-4 ${plan.popular ? "shadow-xl scale-[1.03]" : ""}`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  Most Popular
+                </div>
+              )}
+
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center text-white`}>
+                {plan.icon}
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold">{plan.name}</h3>
+                <div className="flex items-end gap-1">
+                  <span className="text-3xl font-extrabold">{plan.price}</span>
+                  <span className="text-muted-foreground text-sm mb-1">{plan.period}</span>
+                </div>
+              </div>
+
+              <ul className="space-y-2 flex-1">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                className={`w-full mt-2 py-2 rounded-lg text-sm font-bold text-white bg-gradient-to-r ${plan.color} hover:opacity-90 transition-opacity`}
+              >
+                {plan.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <DialogFooter className="mt-2 text-center">
+          <p className="text-xs text-muted-foreground w-full text-center">
+            All plans include 14-day free trial. No credit card required.{" "}
+            <a href="mailto:sentimentsupport@gmail.com" className="underline text-primary">
+              Contact us
+            </a>{" "}
+            for custom pricing.
+          </p>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
@@ -606,10 +893,11 @@ export default function ResultsPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [])
 
+  // Threshold changed from 0.7 to 0.6
   useEffect(() => {
     if (!results) return
 
-    let filtered = results.comments.filter((c) => c.confidence >= 0.7)
+    let filtered = results.comments.filter((c) => c.confidence >= 0.6)
 
     if (searchQuery) {
       filtered = filtered.filter(
@@ -646,32 +934,32 @@ export default function ResultsPage() {
   const pieData = [
     { name: "Positive", value: results.sentiment.positive, color: "#22c55e" },
     { name: "Negative", value: results.sentiment.negative, color: "#ef4444" },
-    { name: "Neutral",  value: results.sentiment.neutral,  color: "#f59e0b" },
+    { name: "Neutral", value: results.sentiment.neutral, color: "#f59e0b" },
   ]
 
   const barData = [
     { name: "Positive", value: results.sentiment.positive, fill: "#22c55e" },
     { name: "Negative", value: results.sentiment.negative, fill: "#ef4444" },
-    { name: "Neutral",  value: results.sentiment.neutral,  fill: "#f59e0b" },
+    { name: "Neutral", value: results.sentiment.neutral, fill: "#f59e0b" },
   ]
 
   const getAnalysisIcon = (type: string) => {
     switch (type) {
-      case "text":    return <MessageSquare className="w-5 h-5 text-foreground" />
-      case "bulk":    return <Upload className="w-5 h-5 text-foreground" />
+      case "text": return <MessageSquare className="w-5 h-5 text-foreground" />
+      case "bulk": return <Upload className="w-5 h-5 text-foreground" />
       case "youtube": return <Youtube className="w-5 h-5 text-foreground" />
-      default:        return <PieChart className="w-5 h-5 text-foreground" />
+      default: return <PieChart className="w-5 h-5 text-foreground" />
     }
   }
 
   const overallSentiment =
     results.sentiment.positive > results.sentiment.negative &&
-    results.sentiment.positive > results.sentiment.neutral
+      results.sentiment.positive > results.sentiment.neutral
       ? "positive"
       : results.sentiment.negative > results.sentiment.positive &&
         results.sentiment.negative > results.sentiment.neutral
-      ? "negative"
-      : "neutral"
+        ? "negative"
+        : "neutral"
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -696,7 +984,8 @@ export default function ResultsPage() {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <HistoryDropdown />
+            {/* Premium Plan button replaces History dropdown */}
+            <PremiumPlansDialog />
             <Button variant="ghost" onClick={handleLogout}>Logout</Button>
             <GradientButton className="flex items-center gap-2 glow-hover" onClick={() => router.push("/analysis")}>
               <RefreshCw className="w-4 h-4" />
@@ -719,7 +1008,7 @@ export default function ResultsPage() {
                 <span className="text-gradient ml-2">
                   {analysisData.type === "text" ? "Text Analysis"
                     : analysisData.type === "bulk" ? "Bulk Comments"
-                    : "YouTube Comments"}
+                      : "YouTube Comments"}
                 </span>
               </h1>
               <EnhancedSentimentIcon sentiment={overallSentiment} size="xl" reactive overallSentiment={overallSentiment} />
@@ -752,15 +1041,13 @@ export default function ResultsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground capitalize">{s}</p>
-                      <p className={`text-3xl font-bold ${
-                        s === "positive" ? "text-green-600" : s === "negative" ? "text-red-600" : "text-yellow-600"
-                      }`}>
+                      <p className={`text-3xl font-bold ${s === "positive" ? "text-green-600" : s === "negative" ? "text-red-600" : "text-yellow-600"
+                        }`}>
                         {results.sentiment[s]}%
                       </p>
                     </div>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      s === "positive" ? "bg-green-500/10" : s === "negative" ? "bg-red-500/10" : "bg-yellow-500/10"
-                    }`}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${s === "positive" ? "bg-green-500/10" : s === "negative" ? "bg-red-500/10" : "bg-yellow-500/10"
+                      }`}>
                       <EnhancedSentimentIcon sentiment={s} size="lg" animated />
                     </div>
                   </div>
@@ -772,6 +1059,7 @@ export default function ResultsPage() {
           {/* Charts */}
           <div ref={chartsRef.ref} className={`fade-in-up ${chartsRef.isVisible ? "animate" : "opacity-100"}`}>
             <div className="grid lg:grid-cols-3 gap-8 mb-8">
+              {/* Chart 1 — Pie/Bar/Radar (3 types) */}
               <GlassCard className="shadow-lg glow-hover">
                 <GlassCardHeader>
                   <GlassCardTitle className="flex items-center gap-2">
@@ -785,6 +1073,7 @@ export default function ResultsPage() {
                 </GlassCardContent>
               </GlassCard>
 
+              {/* Chart 2 — Bar/Pie (2 types) */}
               <GlassCard className="shadow-lg glow-hover">
                 <GlassCardHeader>
                   <GlassCardTitle className="flex items-center gap-2">
@@ -819,10 +1108,10 @@ export default function ResultsPage() {
               <GlassCardHeader>
                 <GlassCardTitle className="flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-foreground" />
-                  Top 10 Comments Analysis ({Math.min(filteredComments.length, 10)})
+                  Top Comments Analysis ({Math.min(filteredComments.length, 10)})
                 </GlassCardTitle>
                 <GlassCardDescription>
-                  Detailed breakdown of the most relevant comments with search and filtering capabilities
+                  Showing comments with ≥ 60% confidence — detailed breakdown with search and filtering
                 </GlassCardDescription>
               </GlassCardHeader>
               <GlassCardContent>
@@ -839,13 +1128,12 @@ export default function ResultsPage() {
                               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
                                 {index + 1}
                               </div>
-                              <Badge className={`flex items-center gap-2 ${
-                                comment.sentiment === "positive"
-                                  ? "bg-green-500/10 text-green-700 border-green-200 dark:text-green-400"
-                                  : comment.sentiment === "negative"
+                              <Badge className={`flex items-center gap-2 ${comment.sentiment === "positive"
+                                ? "bg-green-500/10 text-green-700 border-green-200 dark:text-green-400"
+                                : comment.sentiment === "negative"
                                   ? "bg-red-500/10 text-red-700 border-red-200 dark:text-red-400"
                                   : "bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400"
-                              }`}>
+                                }`}>
                                 <EnhancedSentimentIcon sentiment={comment.sentiment} size="sm" />
                                 {comment.sentiment.charAt(0).toUpperCase() + comment.sentiment.slice(1)}
                               </Badge>
